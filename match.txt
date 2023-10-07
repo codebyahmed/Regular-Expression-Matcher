@@ -1,2 +1,2 @@
-cat
-the cat in the hat
+ab*c
+abbbbbbcabc

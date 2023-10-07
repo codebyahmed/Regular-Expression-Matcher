@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     // Perform regular expression matching
     if (match(regexp, text))
     {
-        printf("match\n");
+        printf("\n");
     }
     else
     {
@@ -79,20 +79,34 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-/* Rob Pike's Regular Expression Matcher */
+/* Rob Pike's Regular Expression Matcher with multi-position capabilities*/
 
+/* match: search for regexp anywhere in text and print the positions */
 int match(char *regexp, char *text)
 {
+    int found = 0;  // Flag to indicate if a match is found
+    int position = 0;  // Position counter
+
     if (regexp[0] == '^')
         return matchhere(regexp + 1, text);
-    do
-    { /* must look even if string is empty */
-        if (matchhere(regexp, text))
-            return 1;
+
+    do {
+        if (matchhere(regexp, text)) {
+            if (found) {
+                printf(" ");
+            } else {
+                found = 1;  // Set the found flag
+                printf("match ");
+            }
+            printf("%d", position);
+        }
+        position++;
     } while (*text++ != '\0');
-    return 0;
+
+    return found;
 }
 
+/* matchhere: search for regexp at the beginning of text */
 int matchhere(char *regexp, char *text)
 {
     if (regexp[0] == '\0')
@@ -106,10 +120,10 @@ int matchhere(char *regexp, char *text)
     return 0;
 }
 
+/* matchstar: search for c*regexp at the beginning of text */
 int matchstar(int c, char *regexp, char *text)
 {
-    do
-    { /* a * matches zero or more instances */
+    do {    /* a * matches zero or more instances */
         if (matchhere(regexp, text))
             return 1;
     } while (*text != '\0' && (*text++ == c || c == '.'));

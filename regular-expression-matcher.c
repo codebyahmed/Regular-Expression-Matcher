@@ -5,6 +5,7 @@
 int match(char *regexp, char *text);
 int matchhere(char *regexp, char *text);
 int matchstar(int c, char *regexp, char *text);
+int matchquestion(char c, char *regexp, char *text);
 
 // Function to read two lines from the file, removing the newline character if it exists
 int readFromFile(const char *filename, char *line1, size_t size1, char *line2, size_t size2)
@@ -111,6 +112,8 @@ int matchhere(char *regexp, char *text)
 {
     if (regexp[0] == '\0')
         return 1;
+    if (regexp[1] == '?') 
+        return matchquestion(regexp[0], regexp + 2, text);
     if (regexp[1] == '*')
         return matchstar(regexp[0], regexp + 2, text);
     if (regexp[0] == '$' && regexp[1] == '\0')
@@ -127,5 +130,17 @@ int matchstar(int c, char *regexp, char *text)
         if (matchhere(regexp, text))
             return 1;
     } while (*text != '\0' && (*text++ == c || c == '.'));
+    return 0;
+}
+
+/* matchquestion: search for c?regexp at the beginning of text */
+int matchquestion(char c, char *regexp, char *text)
+{
+    // Try to match without the previous character first.
+    if (matchhere(regexp, text))
+        return 1;
+    // If that fails, try to match with the previous character.
+    if (*text != '\0' && (c == '.' || c == *text))
+        return matchhere(regexp, text + 1);
     return 0;
 }

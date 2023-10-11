@@ -118,6 +118,14 @@ int matchhere(char *regexp, char *text)
         return matchstar(regexp[0], regexp + 2, text);
     if (regexp[0] == '$' && regexp[1] == '\0')
         return *text == '\0';
+    if (regexp[0] == '\\') {
+        // Handle escape character
+        if (regexp[1] == text[0]) {
+            return matchhere(regexp + 2, text + 1);
+        } else {
+            return 0; // Mismatched escape sequence
+        }
+    }
     if (*text != '\0' && (regexp[0] == '.' || regexp[0] == *text))
         return matchhere(regexp + 1, text + 1);
     return 0;

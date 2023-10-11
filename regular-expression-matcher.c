@@ -84,10 +84,10 @@ int main(int argc, char *argv[])
 /* Rob Pike's Regular Expression Matcher with multi-position capabilities*/
 
 /* match: search for regexp anywhere in text and print the positions */
-int match(char *regexp, char *text)
-{
+int match(char *regexp, char *text) {
     int found = 0;  // Flag to indicate if a match is found
     int position = 0;  // Position counter
+    int longest_match = 0;  // Store the length of the longest match
 
     if (regexp[0] == '^')
         return matchhere(regexp + 1, text);
@@ -101,9 +101,20 @@ int match(char *regexp, char *text)
                 printf("match ");
             }
             printf("%d", position);
+            longest_match = 1;  // Set the longest_match flag
+
+            // Skip to the end of the current match to avoid overlaps
+            while (text[longest_match] != '\0' && matchhere(regexp, text + longest_match)) {
+                longest_match++;
+            }
+
+            text += longest_match;
+            position += longest_match;
+        } else {
+            text++;
+            position++;
         }
-        position++;
-    } while (*text++ != '\0');
+    } while (*text != '\0');
 
     return found;
 }

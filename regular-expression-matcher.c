@@ -7,6 +7,7 @@ int matchhere(char *regexp, char *text);
 int matchstar(int c, char *regexp, char *text);
 int matchquestion(char c, char *regexp, char *text);
 int matchset(char c, char *regexp, char *text);
+int matchplus(int c, char *regexp, char *text);
 
 // Function to read two lines from the file, removing the newline character if it exists
 int readFromFile(const char *filename, char *line1, size_t size1, char *line2, size_t size2)
@@ -128,6 +129,8 @@ int matchhere(char *regexp, char *text)
         return matchquestion(regexp[0], regexp + 2, text);
     if (regexp[1] == '*')
         return matchstar(regexp[0], regexp + 2, text);
+    if (regexp[1] == '+')
+        return matchplus(regexp[0], regexp + 2, text);
     if (regexp[0] == '$' && regexp[1] == '\0')
         return *text == '\0';
     if (regexp[0] == '\\') {
@@ -156,11 +159,13 @@ int matchhere(char *regexp, char *text)
 /* matchstar: search for c*regexp at the beginning of text */
 int matchstar(int c, char *regexp, char *text)
 {
-    do {    /* a * matches zero or more instances */
-        if (matchhere(regexp, text))
+    while (*text != '\0' && (*text == c || c == '.')) {
+        if (matchhere(regexp, text)) {
             return 1;
-    } while (*text != '\0' && (*text++ == c || c == '.'));
-    return 0;
+        }
+        text++;
+    }
+    return matchhere(regexp, text);
 }
 
 /* matchquestion: search for c?regexp at the beginning of text */
@@ -201,4 +206,11 @@ int matchset(char c, char *regexp, char *text) {
     }
 
     return 0; // No match in the character set
+}
+
+int matchplus(int c, char *regexp, char *text) {
+    if (*text == c) {
+        return matchstar(c, regexp, text + 1);
+    }
+    return 0;
 }

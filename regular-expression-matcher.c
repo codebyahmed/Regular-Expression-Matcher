@@ -98,7 +98,10 @@ int match(char *regexp, char *text) {
     int position = 0;  // Position counter
 
     if (regexp[0] == '^')
-        return matchhere(regexp + 1, text);
+        if (matchhere(regexp + 1, text)) {
+            found = 1;
+            printf("match 0");
+        }
 
     while (*text != '\0') {  // Change the loop to terminate at the end of the text
         if (matchhere(regexp, text)) {

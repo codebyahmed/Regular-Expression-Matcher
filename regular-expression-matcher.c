@@ -94,39 +94,28 @@ int main(int argc, char *argv[]) {
 
 /* match: search for regexp anywhere in text and print the positions */
 int match(char *regexp, char *text) {
-    int found = 0;         // Flag to indicate if a match is found
-    int position = 0;      // Position counter
-    int longest_match = 0; // Store the length of the longest match
+    int found = 0;  // Flag to indicate if a match is found
+    int position = 0;  // Position counter
 
     if (regexp[0] == '^')
         return matchhere(regexp + 1, text);
 
-    do {
+    while (*text != '\0') {  // Change the loop to terminate at the end of the text
         if (matchhere(regexp, text)) {
             if (found) {
                 printf(" ");
             } else {
-                found = 1; // Set the found flag
+                found = 1;  // Set the found flag
                 printf("match ");
             }
             printf("%d", position);
-            longest_match = 1; // Set the longest_match flag
-
-            // Skip to the end of the current match to avoid overlaps
-            while (text[longest_match] != '\0' && matchhere(regexp, text + longest_match)) {
-                longest_match++;
-            }
-
-            text += longest_match;
-            position += longest_match;
-        } else {
-            text++;
-            position++;
         }
-    } while (*text != '\0');
-
+        position++;
+        text++;  // Move to the next character in the text
+    }
     return found;
 }
+
 
 /* matchhere: search for regexp at the beginning of text */
 int matchhere(char *regexp, char *text) {

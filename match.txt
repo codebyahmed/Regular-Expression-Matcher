@@ -1,2 +1,2 @@
-ab*c
-abbbbbbcabc
+regex = "[bd]"
+string = "abcdefg"

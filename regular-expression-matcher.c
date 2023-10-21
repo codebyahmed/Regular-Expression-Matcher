@@ -32,61 +32,36 @@ int matchset(char c, char *regexp, char *text);
 int matchplus(int c, char *regexp, char *text);
 
 // Function to read two lines from the file, removing the newline character if it exists
-int readFromFile(const char *filename, char *regex, size_t size1, char *text, size_t size2) {
+int readFromFile(const char *filename, char *line1, size_t size1, char *line2, size_t size2) {
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
-        perror("Error opening file");
+        printf("Error opening file\n");
         return 0;
     }
 
-    char line1[1024], line2[1024];
-
-    // Read the first line (regex)
-    if (fgets(line1, sizeof(line1), fp) == NULL) {
-        perror("Error reading the first line from the file");
+    // Read the first line from the file
+    if (!fgets(line1, size1, fp)) {
+        printf("Error reading the first line from the file\n");
         fclose(fp);
         return 0;
     }
+    // Remove the newline character, if it exists at the end of the first line
+    size_t len1 = strlen(line1);
+    if (len1 > 0 && line1[len1 - 1] == '\n')
+        line1[len1 - 1] = '\0';
 
-    // Read the second line (text)
-    if (fgets(line2, sizeof(line2), fp) == NULL) {
-        perror("Error reading the second line from the file");
+    // Read the second line from the file
+    if (!fgets(line2, size2, fp)) {
+        printf("Error reading the second line from the file\n");
         fclose(fp);
         return 0;
     }
+    // Remove the newline character, if it exists at the end of the second line
+    size_t len2 = strlen(line2);
+    if (len2 > 0 && line2[len2 - 1] == '\n')
+        line2[len2 - 1] = '\0';
 
     fclose(fp);
-
-    // Extract the regex within quotation marks
-    char *regex_start = strchr(line1, '"');
-    if (regex_start == NULL) {
-        printf("No opening quotation mark found in the first line\n");
-        return 0;
-    }
-    regex_start++; // Move past the opening quotation mark
-    char *regex_end = strchr(regex_start, '"');
-    if (regex_end == NULL) {
-        printf("No closing quotation mark found in the first line\n");
-        return 0;
-    }
-    *regex_end = '\0'; // Replace the closing quotation mark with a null terminator
-    strncpy(regex, regex_start, size1);
-
-    // Extract the text within quotation marks
-    char *text_start = strchr(line2, '"');
-    if (text_start == NULL) {
-        printf("No opening quotation mark found in the second line\n");
-        return 0;
-    }
-    text_start++; // Move past the opening quotation mark
-    char *text_end = strchr(text_start, '"');
-    if (text_end == NULL) {
-        printf("No closing quotation mark found in the second line\n");
-        return 0;
-    }
-    *text_end = '\0'; // Replace the closing quotation mark with a null terminator
-    strncpy(text, text_start, size2);
-
     return 1; // Both lines were successfully read
 }
 

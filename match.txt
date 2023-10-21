@@ -1,2 +1,2 @@
-regex = "[bd]"
-string = "abcdefg"
+[bd]
+abcdefg

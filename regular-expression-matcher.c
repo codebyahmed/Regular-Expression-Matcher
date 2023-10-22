@@ -97,6 +97,15 @@ int match(char *regexp, char *text) {
     int found = 0;  // Flag to indicate if a match is found
     int position = 0;  // Position counter
     int longest_match = 0; // Store the length of the longest match
+    int is_combine = 1; // Flag to indicate printing case depending on combination of regex
+
+    // Different printing mechanism depending on combination
+    for (int i = 0; regexp[i] != '\0'; i++) {
+        if (regexp[i] == '?' || regexp[i] == '+') {
+            is_combine = 0;
+            break;
+        }
+    }
 
     if (regexp[0] == '^')
         if (matchhere(regexp + 1, text)) {
@@ -115,11 +124,18 @@ int match(char *regexp, char *text) {
             printf("%d", position);
             longest_match = 1; // Set the longest_match flag
 
-            // Skip to the end of the current match to avoid overlaps
-            while (text[longest_match] != '\0' && matchhere(regexp, text + longest_match)) {
-                longest_match++;
+            if (!is_combine) {
+                // Skip to the end of the current match to avoid overlaps
+                while (text[longest_match] != '\0' && matchhere(regexp, text + longest_match)) {
+                    longest_match++;
+                }
             }
-
+            else {
+                // Skip to the end of the current match to avoid overlaps
+                while (text[longest_match] != '\0' && matchhere(regexp, text + longest_match) && text[0] == text[longest_match]) {
+                    longest_match++;
+                }
+            }
             text += longest_match;
             position += longest_match;
         } else {
@@ -127,10 +143,8 @@ int match(char *regexp, char *text) {
             position++;
         }
     } while (*text != '\0');
-
     return found;
 }
-
 
 /* matchhere: search for regexp at the beginning of text */
 int matchhere(char *regexp, char *text) {
@@ -190,8 +204,12 @@ int matchquestion(char c, char *regexp, char *text) {
 }
 
 /* matchset: search for a character in the set */
+/* matchset: search for a character in the set */
 int matchset(char c, char *regexp, char *text) {
     int negate_set = 0;
+    int literal_follows = 0; // Flag to indicate if a literal character follows the set
+    int found = 0; // Flag to indicate if a match is found
+
     regexp++; // Skip '['
 
     if (regexp[0] == '^') {
@@ -199,23 +217,50 @@ int matchset(char c, char *regexp, char *text) {
         regexp++;
     }
 
+    //check if literal or regex character follows the set
+    int incremented = 0;
+    while (regexp[0] != '\0' && regexp[0] != ']') {
+        if (regexp[1] != '\0' && regexp[1] == ']') {
+            if (regexp[2] == '\0' || regexp[2] == '[')
+                literal_follows = 0;
+            else
+                literal_follows = 1;
+            break;
+        }
+        regexp++;
+        incremented++;
+    }
+    char *new_regexp = regexp+2;
+    regexp -= incremented;
+
     while (regexp[0] != '\0' && regexp[0] != ']') {
         if (regexp[1] == '-' && regexp[2] >= regexp[0]) {
             if ((c >= regexp[0] && c <= regexp[2]) ||
                 (negate_set && (c < regexp[0] || c > regexp[2]))) {
-                return 1; // Match found
+                found = 1; // Match found
             }
             regexp += 3; // Skip range and dash
         } else {
             if ((c == regexp[0]) ||
                 (negate_set && c != regexp[0])) {
-                return 1; // Match found
+                found = 1; // Match found
             }
             regexp++;
         }
     }
 
-    return 0; // No match in the character set
+    //check if new_regexp matches the next character in text
+    if (found && literal_follows) {
+        if (new_regexp[0] == '?' || new_regexp[0] == '*' || new_regexp[0] == '+')
+            return matchhere(new_regexp-1, text);
+        else
+            return matchhere(new_regexp, text + 1);
+    }
+
+    if (literal_follows && new_regexp[0] == '*')
+        return matchhere(new_regexp-1, text);
+
+    return found; // No match in the character set
 }
 
 /* matchplus: search for c+regexp at the beginning of text */
